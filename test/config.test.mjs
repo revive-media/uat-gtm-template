@@ -42,3 +42,9 @@ test('INFO lists one to three Gallery categories', () => {
   const info = getInfo(readTemplate());
   assert.ok(Array.isArray(info.categories) && info.categories.length >= 1 && info.categories.length <= 3);
 });
+
+test('renaming keeps $ sequences in the description literal', () => {
+  const description = 'Costs $& and $1 and $$ stay as typed.';
+  const next = applyConfig(readTemplate(), README, Object.assign({}, readConfig(), { description }));
+  assert.equal(getInfo(next.template).description, description);
+});

@@ -11,6 +11,7 @@
 
 import { readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { pathToFileURL } from 'node:url';
 import {
   ROOT, TEMPLATE_PATH, readTemplate, readConfig, parseSections,
   serializeSections, getSection, getInfo, getScriptUrl
@@ -34,7 +35,10 @@ export function applyConfig(templateText, readmeText, config) {
   const sections = parseSections(templateText);
   const infoSection = getSection(sections, 'INFO');
   const json = infoSection.body.trim();
-  infoSection.body = infoSection.body.replace(json, JSON.stringify(info, null, 2));
+  // A function replacer inserts the JSON verbatim; a string replacer would
+  // expand $& or $1 in a description.
+  const infoJson = JSON.stringify(info, null, 2);
+  infoSection.body = infoSection.body.replace(json, () => infoJson);
 
   // The script URL lives in the code and in the inject_script permission.
   sections.forEach((s) => {
@@ -68,4 +72,6 @@ function main() {
   console.log(changed ? 'Updated template.tpl and README.md.' : 'Already up to date.');
 }
 
-if (import.meta.url === 'file://' + process.argv[1]) main();
+// Run only when executed directly, not when imported by the tests. Compare
+// file URLs so paths with spaces or Windows paths still match.
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) main();

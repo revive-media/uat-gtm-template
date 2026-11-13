@@ -790,6 +790,28 @@ scenarios:
 
     assertApi('callInWindow').wasCalledWith('rtag', 'pageview');
     assertApi('callInWindow').wasCalledWith('rtag', 'track', 'Lead');
+- name: Checkbox does not send a second page view on the same page
+  code: |-
+    let pageviews = 0;
+    mock('callInWindow', function(path, command) {
+      if (command === 'pageview') pageviews++;
+    });
+
+    runCode({advertiserId: 'adv123', eventName: 'Lead', firePageView: true});
+    runCode({advertiserId: 'adv123', eventName: 'AddToCart', firePageView: true});
+
+    assertThat(pageviews).isEqualTo(1);
+- name: Two tags on one page initialize once
+  code: |-
+    let inits = 0;
+    mock('callInWindow', function(path, command) {
+      if (command === 'init') inits++;
+    });
+
+    runCode({advertiserId: 'adv123', eventName: 'PageView'});
+    runCode({advertiserId: 'adv123', eventName: 'Lead'});
+
+    assertThat(inits).isEqualTo(1);
 - name: Custom event sends the custom name
   code: |-
     runCode({advertiserId: 'adv123', eventName: '__custom__', customEventName: 'Quote Request'});
@@ -861,6 +883,15 @@ scenarios:
     assertApi('addConsentListener').wasCalled();
     assertApi('callInWindow').wasCalledWith('rtag', 'track', 'Lead');
 setup: |-
+  // GTM keeps templateStorage between tests, so give each test a fresh one.
+  // It still persists across runCode calls within a test, like one page.
+  const store = {};
+  mockObject('templateStorage', {
+    getItem: function(key) { return store[key]; },
+    setItem: function(key, value) { store[key] = value; },
+    removeItem: function(key) { store[key] = undefined; },
+    clear: function() {}
+  });
   mock('callInWindow', function() {});
   mock('addConsentListener', function() {});
   mock('createArgumentsQueue', function() {});
