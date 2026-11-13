@@ -1,0 +1,12 @@
+{
+  "name": "uat-gtm-template",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test \"test/*.test.mjs\"",
+    "apply-config": "node scripts/apply-config.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

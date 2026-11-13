@@ -1,0 +1,5 @@
+{
+  "displayName": "Revive Universal Ad Tag",
+  "description": "Send conversion and page view events to your ad platforms with one tag. Enter your Universal Ad Tag ID, pick an event, and the tag handles loading.",
+  "scriptUrl": "https://t.ad-reporting.net/r-tracker.js"
+}
