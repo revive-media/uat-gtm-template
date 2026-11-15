@@ -13,16 +13,17 @@ ___INFO___
   "id": "cvt_temp_public_id",
   "version": 1,
   "securityGroups": [],
-  "displayName": "Revive Universal Ad Tag",
+  "displayName": "Revive Media Ad Tag",
   "categories": [
     "ADVERTISING",
     "CONVERSIONS"
   ],
   "brand": {
     "id": "brand_dummy",
-    "displayName": "Revive Universal Ad Tag"
+    "displayName": "Revive Media",
+    "thumbnail": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABtklEQVR42u2XwW2DMBSGPUJG6AgZoSNkg+bSYHpig+aGlAbMBskG6QaMwghIYJRj6gfYMQYDBRsusWQhEuT32e/372eEpPaD8/cQ0zh0aMqeD6O9GjMOMN2jrkYwvRgPqunEoaQZ3KVE+jMNcAEwUYDzo7HuFLcGBItRBoclkX5MCL6/IUsNxoYYPB6kHJU5FwD2gssQXGMs7TF6Ci7/RQs1Fu/KhYn47CFPywHkEY+7CgDEGgXgs3wFONtDB8EcvcdGNyj/9uxmu9MX3c4GIF66EbmSzISp+LvTvFr7vUh0pjN6BdSPVSMJ3fvHoOkowP8GqF2yNcPTJ92Odb5yv88BCA7U65hZMtp6Yb/PAajzPLTUCYCCGAkTKzzPh2xX6gj2+xwAUHU/QB71q74pxgkaYPapn/nFmg8MrcDUw8uYBqbM3igAiGxVADJgufYBmF2vCmD9NHwBLArQZ6d2AUSFqjcV0wBQAIuiVJz17MXX2KpJAL95rsTK4EXSBWEKoAr+rCPEKRnirFH7BW5xk69VrdpQEu6YXl3z2HWvcelVNCfX6vZ7dtUWDpAXYuF6Xo8Zq/XhH9Z4o09kmrErAAAAAElFTkSuQmCC"
   },
-  "description": "Send conversion and page view events to your ad platforms with one tag. Enter your Universal Ad Tag ID, pick an event, and the tag handles loading.",
+  "description": "Revive Media enables brands, agencies & advertisers to use Amazon’s exclusive audience data and supply via Amazon DSP, Sponsored Ads & Amazon Marketing Cloud across their media stack and other DSPs.",
   "containerContexts": [
     "WEB"
   ]

@@ -1,13 +1,13 @@
-# Revive Universal Ad Tag for Google Tag Manager
+# Revive Media Ad Tag for Google Tag Manager
 
-A Google Tag Manager tag template for the Revive Universal Ad Tag. Enter your
+A Google Tag Manager tag template for the Revive Media Ad Tag. Enter your
 Universal Ad Tag ID, pick an event, and the tag loads the library and sends the
 event. You do not need any Custom HTML tags.
 
 ## Set up
 
 1. In Google Tag Manager, go to **Tags > New > Tag Configuration** and pick
-   **Revive Universal Ad Tag** from the Community Template Gallery.
+   **Revive Media Ad Tag** from the Community Template Gallery.
 2. Fill in the fields below and choose a trigger.
 3. Repeat for each event you want to send. Every tag uses the same Universal Ad
    Tag ID.
@@ -101,12 +101,13 @@ https://t.ad-reporting.net https://www.googletagmanager.com https://c.amazon-ads
 | File | Purpose |
 | --- | --- |
 | `template.tpl` | The template, in GTM's export format. Gallery requires it at the root. |
-| `template.config.json` | The display name, description, and script URL. Change them here only. |
+| `template.config.json` | The display name, brand, description, icon path, and script URL. Change them here only. |
+| `assets/icon.png` | The template icon (32 x 32 PNG), from the portal's production favicon. |
 | `metadata.yaml` | Gallery metadata: homepage, documentation, and released versions. |
 | `scripts/apply-config.mjs` | Writes `template.config.json` into `template.tpl` and this README. |
 | `test/` | Runs the template code in Node against a fake GTM sandbox. |
 
-### Rename the template or change the script URL
+### Rename the template, or change the icon or script URL
 
 Edit `template.config.json`, then run:
 
@@ -114,8 +115,9 @@ Edit `template.config.json`, then run:
 npm run apply-config
 ```
 
-It updates the name, brand, and description in `template.tpl`, the script URL in
-the code and the `inject_script` permission, and the name in this README.
+It updates the name, brand, description, and icon in `template.tpl`, the script
+URL in the code and the `inject_script` permission, and the name in this README.
+The icon must be a PNG.
 
 ### Test
 
