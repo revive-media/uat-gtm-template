@@ -1,6 +1,4 @@
-# TODO before the first Gallery submission: set homepage (public on the
-# Gallery listing; see the white-label decision in REP-1086), and add the
-# first release's commit SHA to versions.
-homepage: "TODO"
+# Add each release's commit SHA to the top of versions. See README > Release.
+homepage: "https://www.revivemedia.com"
 documentation: "https://github.com/revive-media/uat-gtm-template#readme"
 versions: []

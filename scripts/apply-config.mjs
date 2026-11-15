@@ -3,8 +3,9 @@
 //   npm run apply-config           write the changes
 //   npm run apply-config -- --check  exit 1 if the files are out of date
 //
-// The display name and script URL appear in several places (the INFO block,
-// the sandboxed code, the inject_script permission, the README). Change them
+// The display name, brand, description, icon, and script URL appear in several
+// places (the INFO block, the sandboxed code, the inject_script permission, the
+// README). Change them
 // in template.config.json only, then run this script. It reads the current
 // values from template.tpl, so it keeps working after you export a new
 // template.tpl from the GTM Template Editor.
@@ -13,7 +14,7 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import {
-  ROOT, TEMPLATE_PATH, readTemplate, readConfig, parseSections,
+  ROOT, TEMPLATE_PATH, readTemplate, readConfig, readIconDataUrl, parseSections,
   serializeSections, getSection, getInfo, getScriptUrl
 } from './tpl.mjs';
 
@@ -23,13 +24,14 @@ function replaceAll(text, from, to) {
   return from === to ? text : text.split(from).join(to);
 }
 
-export function applyConfig(templateText, readmeText, config) {
+// `thumbnail` is the icon as a data URL (see readIconDataUrl in tpl.mjs).
+export function applyConfig(templateText, readmeText, config, thumbnail) {
   const info = getInfo(templateText);
   const oldName = info.displayName;
   const oldUrl = getScriptUrl(templateText);
 
   info.displayName = config.displayName;
-  info.brand = Object.assign({}, info.brand, { displayName: config.displayName });
+  info.brand = Object.assign({}, info.brand, { displayName: config.brandName, thumbnail });
   info.description = config.description;
 
   const sections = parseSections(templateText);
@@ -55,7 +57,8 @@ function main() {
   const check = process.argv.includes('--check');
   const templateText = readTemplate();
   const readmeText = readFileSync(README_PATH, 'utf8');
-  const next = applyConfig(templateText, readmeText, readConfig());
+  const config = readConfig();
+  const next = applyConfig(templateText, readmeText, config, readIconDataUrl(config));
   const changed = next.template !== templateText || next.readme !== readmeText;
 
   if (check) {

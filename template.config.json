@@ -1,5 +1,7 @@
 {
-  "displayName": "Revive Universal Ad Tag",
-  "description": "Send conversion and page view events to your ad platforms with one tag. Enter your Universal Ad Tag ID, pick an event, and the tag handles loading.",
+  "displayName": "Revive Media Ad Tag",
+  "brandName": "Revive Media",
+  "description": "Revive Media enables brands, agencies & advertisers to use Amazon’s exclusive audience data and supply via Amazon DSP, Sponsored Ads & Amazon Marketing Cloud across their media stack and other DSPs.",
+  "icon": "assets/icon.png",
   "scriptUrl": "https://t.ad-reporting.net/r-tracker.js"
 }

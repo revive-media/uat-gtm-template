@@ -43,6 +43,15 @@ export function readConfig() {
   return JSON.parse(readFileSync(CONFIG_PATH, 'utf8'));
 }
 
+// The config's icon file as the data URL GTM stores in brand.thumbnail.
+export function readIconDataUrl(config) {
+  const data = readFileSync(join(ROOT, config.icon));
+  if (data.subarray(1, 4).toString('latin1') !== 'PNG') {
+    throw new Error(config.icon + ' is not a PNG file');
+  }
+  return 'data:image/png;base64,' + data.toString('base64');
+}
+
 // The sandboxed JS that GTM runs for the tag.
 export function getSandboxedCode(text) {
   return getSection(parseSections(text), 'SANDBOXED_JS_FOR_WEB_TEMPLATE').body;
