@@ -1,4 +1,6 @@
 # Add each release's commit SHA to the top of versions. See README > Release.
 homepage: "https://www.revivemedia.com"
 documentation: "https://github.com/revive-media/uat-gtm-template#readme"
-versions: []
+versions:
+  - sha: ca368d72c631b7900c8d8fe566b5ffa6622b6fc5
+    changeNotes: Initial release.
