@@ -104,6 +104,7 @@ https://t.ad-reporting.net https://www.googletagmanager.com https://c.amazon-ads
 | `template.config.json` | The display name, brand, description, icon path, and script URL. Change them here only. |
 | `assets/icon.png` | The template icon (32 x 32 PNG), from the portal's production favicon. |
 | `metadata.yaml` | Gallery metadata: homepage, documentation, and released versions. |
+| `scripts/add-release.mjs` | Adds a release to `metadata.yaml`. Run by `.github/workflows/release.yml`. |
 | `scripts/apply-config.mjs` | Writes `template.config.json` into `template.tpl` and this README. |
 | `test/` | Runs the template code in Node against a fake GTM sandbox. |
 
@@ -139,10 +140,26 @@ for the library's bootstrap. They also check that `template.tpl` matches
 
 ### Release to the Community Template Gallery
 
+Merging into `main` does not change the Gallery. The Gallery publishes only the
+commits listed in `versions` in `metadata.yaml`, newest first.
+
 1. In the Template Editor's **Info** tab, tick **Agree to the Community Template
    Gallery Terms of Service**, then export to `template.tpl`.
-2. Commit `template.tpl` to `main`.
-3. Add that commit's SHA to the top of `versions` in `metadata.yaml` and commit.
+2. Open a pull request into `main` and add the **release** label. Users see
+   release notes in GTM. To write them, add a `## Release notes` section to the
+   PR description; its first paragraph is used. Without one, the PR title is
+   used, minus the Linear key (`REP-123:`).
+3. Merge the PR. The **Release to Gallery** workflow tests the merged
+   `template.tpl`, adds the merge commit's SHA to the top of `versions`, and
+   pushes `metadata.yaml` to `main`. It fails if `template.tpl` did not change
+   since the last release.
 4. First release only: submit the repository URL at
    [tagmanager.google.com/gallery](https://tagmanager.google.com/gallery).
    Later versions appear in the Gallery within two to three days.
+
+Users who already have the template see an update notice in GTM and choose when
+to update. Changes to `r-tracker.js` need no release: every tag loads the
+library from `t.ad-reporting.net`.
+
+To release without the workflow, add the commit's SHA to the top of `versions`
+yourself, as in `scripts/add-release.mjs`.

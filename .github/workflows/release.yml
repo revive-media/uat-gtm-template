@@ -1,0 +1,60 @@
+# Releases a new template version to the Community Template Gallery.
+#
+# When a pull request with the `release` label is merged into main, this adds
+# the merge commit's SHA to the top of `versions` in metadata.yaml and pushes
+# that to main. The Gallery picks it up within two to three days.
+
+name: Release to Gallery
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [main]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: gallery-release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    if: github.event.pull_request.merged == true && contains(github.event.pull_request.labels.*.name, 'release')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Test the merged template
+        run: |
+          git checkout --quiet "$SHA"
+          npm test
+          git checkout --quiet main
+        env:
+          SHA: ${{ github.event.pull_request.merge_commit_sha }}
+
+      - name: Add the version to metadata.yaml
+        run: node scripts/add-release.mjs "$SHA"
+        env:
+          SHA: ${{ github.event.pull_request.merge_commit_sha }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add metadata.yaml
+          git commit --quiet -m "Release ${SHA:0:7} to the Community Template Gallery (#$PR_NUMBER)"
+          git pull --quiet --rebase origin main
+          git push origin HEAD:main
+        env:
+          SHA: ${{ github.event.pull_request.merge_commit_sha }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
