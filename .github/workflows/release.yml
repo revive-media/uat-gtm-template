@@ -6,9 +6,9 @@
 # the workflow cannot push to it directly. The Gallery picks up the new version
 # within two to three days.
 #
-# pull_request_target gives a write token even when the PR came from a fork.
-# It is safe here: the job runs only after a merge, and it checks out main and
-# the merge commit, never the PR's own branch.
+# It runs on push to main rather than on pull_request: push always gets a write
+# token, even for a PR from a fork, without pull_request_target. It looks up
+# the merged PR from the pushed commit and stops unless that PR has the label.
 #
 # There is no concurrency group: GitHub keeps only one pending run per group
 # and cancels the rest, which would drop releases. If two releases race, the
@@ -17,8 +17,7 @@
 name: Release to Gallery
 
 on:
-  pull_request_target:
-    types: [closed]
+  push:
     branches: [main]
 
 permissions:
@@ -27,37 +26,59 @@ permissions:
 
 jobs:
   release:
-    if: github.event.pull_request.merged == true && contains(github.event.pull_request.labels.*.name, 'release')
     runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      SHA: ${{ github.sha }}
+      # The runner context is not available here, so steps use $RUNNER_TEMP.
+      PR_FILE_NAME: pr.json
     steps:
-      - uses: actions/checkout@v4
+      - name: Find the merged pull request
+        id: pr
+        run: |
+          gh api "repos/$GITHUB_REPOSITORY/commits/$SHA/pulls" \
+            --jq '[.[] | select(.merged_at != null and .merge_commit_sha == $ENV.SHA)][0] // {}' > "$RUNNER_TEMP/$PR_FILE_NAME"
+          if jq -e '(.labels // []) | map(.name) | index("release")' "$RUNNER_TEMP/$PR_FILE_NAME" > /dev/null; then
+            echo "release=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "Not a merge of a PR labeled release. Nothing to do."
+            echo "release=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - if: steps.pr.outputs.release == 'true'
+        uses: actions/checkout@v4
         with:
-          ref: main
+          ref: ${{ github.sha }}
           fetch-depth: 0
 
-      - uses: actions/setup-node@v4
+      - if: steps.pr.outputs.release == 'true'
+        uses: actions/setup-node@v4
         with:
           node-version: 20
 
       - name: Test the merged template
-        run: |
-          git checkout --quiet "$SHA"
-          npm test
-          git checkout --quiet main
-        env:
-          SHA: ${{ github.event.pull_request.merge_commit_sha }}
+        if: steps.pr.outputs.release == 'true'
+        run: npm test
 
+      # Tests ran on the pushed commit. metadata.yaml comes from the latest
+      # main, so a rerun after another release merged sees that release.
+      # PR text goes through env vars, never inline ${{ }}, so it cannot
+      # inject shell commands.
       - name: Add the version to metadata.yaml
-        run: node scripts/add-release.mjs "$SHA"
-        env:
-          SHA: ${{ github.event.pull_request.merge_commit_sha }}
-          PR_TITLE: ${{ github.event.pull_request.title }}
-          PR_BODY: ${{ github.event.pull_request.body }}
+        if: steps.pr.outputs.release == 'true'
+        run: |
+          git fetch --quiet origin main
+          git checkout --quiet --detach origin/main
+          export PR_TITLE="$(jq -r '.title // ""' "$RUNNER_TEMP/$PR_FILE_NAME")"
+          export PR_BODY="$(jq -r '.body // ""' "$RUNNER_TEMP/$PR_FILE_NAME")"
+          node scripts/add-release.mjs "$SHA"
 
       # A pull request opened with GITHUB_TOKEN does not trigger workflows, so
       # this cannot loop.
       - name: Open and merge the release pull request
+        if: steps.pr.outputs.release == 'true'
         run: |
+          PR_NUMBER="$(jq -r .number "$RUNNER_TEMP/$PR_FILE_NAME")"
           BRANCH="release/${SHA:0:7}"
           TITLE="Release ${SHA:0:7} to the Community Template Gallery"
           git config user.name "github-actions[bot]"
@@ -73,7 +94,3 @@ jobs:
               --body "Adds $SHA from #$PR_NUMBER to metadata.yaml. Opened and merged by the Release to Gallery workflow.")
           fi
           gh pr merge "$URL" --merge --delete-branch
-        env:
-          GH_TOKEN: ${{ github.token }}
-          SHA: ${{ github.event.pull_request.merge_commit_sha }}
-          PR_NUMBER: ${{ github.event.pull_request.number }}
