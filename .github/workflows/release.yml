@@ -60,11 +60,15 @@ jobs:
         if: steps.pr.outputs.release == 'true'
         run: npm test
 
+      # Tests ran on the pushed commit. metadata.yaml comes from the latest
+      # main, so a rerun after another release merged sees that release.
       # PR text goes through env vars, never inline ${{ }}, so it cannot
       # inject shell commands.
       - name: Add the version to metadata.yaml
         if: steps.pr.outputs.release == 'true'
         run: |
+          git fetch --quiet origin main
+          git checkout --quiet --detach origin/main
           export PR_TITLE="$(jq -r '.title // ""' "$RUNNER_TEMP/$PR_FILE_NAME")"
           export PR_BODY="$(jq -r '.body // ""' "$RUNNER_TEMP/$PR_FILE_NAME")"
           node scripts/add-release.mjs "$SHA"
