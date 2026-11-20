@@ -4,7 +4,7 @@
 //
 // .github/workflows/release.yml runs this when a pull request with the
 // `release` label is merged into main. The change notes come from the PR's
-// "## Release notes" section, or from its title without the Linear key.
+// "## Release notes" section, or from its title without a leading issue key.
 
 import { readFileSync, writeFileSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
@@ -16,7 +16,7 @@ const METADATA_PATH = join(ROOT, 'metadata.yaml');
 const SHA = /^[0-9a-f]{40}$/;
 
 // The first paragraph under "## Release notes", or the title without a
-// leading Linear key such as "REP-1086: ". Users see these notes in GTM.
+// leading issue key such as "ABC-123: ". Users see these notes in GTM.
 export function releaseNotes(title, body) {
   const lines = (body || '').replace(/<!--[\s\S]*?-->/g, '').split(/\r?\n/);
   const start = lines.findIndex((line) => /^##\s+release notes\s*$/i.test(line.trim()));

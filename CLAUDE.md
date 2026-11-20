@@ -16,9 +16,9 @@ in `metadata.yaml`. Merging into `main` does not release anything by itself.
   - New PR: `gh pr create --label release ...`
   - Existing PR: `gh pr edit <number> --add-label release`
 - **Add a `## Release notes` section to the PR description.** Write one short
-  paragraph for advertisers, who read it in GTM. Leave out Linear keys, internal
+  paragraph for advertisers, who read it in GTM. Leave out issue keys, internal
   names, and internal links: advertisers may not know who we are. Without the
-  section, the workflow uses the PR title minus its Linear key.
+  section, the workflow uses the PR title minus a leading issue key.
 - **Do not label** PRs that change only the README, `test/`, `scripts/`,
   `.github/`, `CLAUDE.md`, or `metadata.yaml`. The workflow fails when
   `template.tpl` is unchanged since the last release.

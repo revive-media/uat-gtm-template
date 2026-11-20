@@ -907,5 +907,3 @@ setup: |-
 
 ___NOTES___
 
-Generated for REP-1086. Edit the display name, description, and script URL in
-template.config.json, then run `npm run apply-config`.
