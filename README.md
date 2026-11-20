@@ -152,7 +152,9 @@ commits listed in `versions` in `metadata.yaml`, newest first.
 3. Merge the PR. The **Release to Gallery** workflow tests the merged
    `template.tpl`, adds the merge commit's SHA to the top of `versions`, then
    opens and merges a `release/<sha>` PR with that change. It fails if
-   `template.tpl` did not change since the last release.
+   `template.tpl` did not change since the last release, or if the merge is
+   older than the last release. If two releases merge at once, the second
+   release PR conflicts and fails; rerun that workflow.
 4. First release only: submit the repository URL at
    [tagmanager.google.com/gallery](https://tagmanager.google.com/gallery).
    Later versions appear in the Gallery within two to three days.

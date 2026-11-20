@@ -56,24 +56,39 @@ export function addVersion(yaml, sha, notes) {
   throw new Error('metadata.yaml has no versions list');
 }
 
-// git diff exits 1 when the files differ.
-function templateChanged(from, to) {
+// Throws unless `sha` can be released after `latest`, the newest listed
+// version. The git checks are passed in so the tests can fake them.
+export function checkRelease(latest, sha, git) {
+  if (!latest) return;
+  // A rerun of an older merge must not be listed above a newer release.
+  if (!git.isAncestor(latest, sha)) {
+    throw new Error(sha + ' does not include the latest release ' + latest + '. It is older or on another branch.');
+  }
+  if (!git.templateChanged(latest, sha)) {
+    throw new Error('template.tpl at ' + sha + ' is the same as the latest release ' + latest);
+  }
+}
+
+// Runs a git command that answers yes (exit 0) or no (exit 1).
+function gitYes(args) {
   try {
-    execFileSync('git', ['diff', '--quiet', from, to, '--', 'template.tpl'], { cwd: ROOT });
-    return false;
+    execFileSync('git', args, { cwd: ROOT, stdio: 'ignore' });
+    return true;
   } catch (error) {
-    if (error.status === 1) return true;
+    if (error.status === 1) return false;
     throw error;
   }
 }
 
+const git = {
+  isAncestor: (from, to) => gitYes(['merge-base', '--is-ancestor', from, to]),
+  templateChanged: (from, to) => !gitYes(['diff', '--quiet', from, to, '--', 'template.tpl'])
+};
+
 function main() {
   const sha = process.argv[2] || '';
   const yaml = readFileSync(METADATA_PATH, 'utf8');
-  const latest = listVersions(yaml)[0];
-  if (SHA.test(sha) && latest && !templateChanged(latest, sha)) {
-    throw new Error('template.tpl at ' + sha + ' is the same as the latest release ' + latest);
-  }
+  if (SHA.test(sha)) checkRelease(listVersions(yaml)[0], sha, git);
   const notes = releaseNotes(process.env.PR_TITLE, process.env.PR_BODY);
   writeFileSync(METADATA_PATH, addVersion(yaml, sha, notes));
   console.log('Added ' + sha + ' to metadata.yaml: ' + notes);

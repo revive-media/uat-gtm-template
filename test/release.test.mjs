@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { addVersion, listVersions, releaseNotes } from '../scripts/add-release.mjs';
+import { addVersion, checkRelease, listVersions, releaseNotes } from '../scripts/add-release.mjs';
 import { ROOT } from '../scripts/tpl.mjs';
 
 const A = 'a'.repeat(40);
@@ -51,4 +51,21 @@ test('metadata.yaml lists only full SHAs', () => {
   const yaml = readFileSync(join(ROOT, 'metadata.yaml'), 'utf8');
   const shaLines = yaml.split('\n').filter((l) => /^\s*-\s*sha:/.test(l));
   assert.equal(listVersions(yaml).length, shaLines.length);
+});
+
+test('checkRelease allows a newer commit with a changed template', () => {
+  const git = { isAncestor: () => true, templateChanged: () => true };
+  assert.doesNotThrow(() => checkRelease(A, B, git));
+  assert.doesNotThrow(() => checkRelease(undefined, B, { isAncestor: null, templateChanged: null }));
+});
+
+test('checkRelease refuses a commit older than the latest release', () => {
+  // A rerun of release A after release B succeeded.
+  const git = { isAncestor: () => false, templateChanged: () => true };
+  assert.throws(() => checkRelease(B, A, git), /does not include the latest release/);
+});
+
+test('checkRelease refuses an unchanged template', () => {
+  const git = { isAncestor: () => true, templateChanged: () => false };
+  assert.throws(() => checkRelease(A, B, git), /same as the latest release/);
 });

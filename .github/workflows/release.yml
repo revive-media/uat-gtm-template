@@ -5,21 +5,25 @@
 # and merges a pull request with that change. main requires pull requests, so
 # the workflow cannot push to it directly. The Gallery picks up the new version
 # within two to three days.
+#
+# pull_request_target gives a write token even when the PR came from a fork.
+# It is safe here: the job runs only after a merge, and it checks out main and
+# the merge commit, never the PR's own branch.
+#
+# There is no concurrency group: GitHub keeps only one pending run per group
+# and cancels the rest, which would drop releases. If two releases race, the
+# second release PR conflicts on metadata.yaml and fails; rerun it.
 
 name: Release to Gallery
 
 on:
-  pull_request:
+  pull_request_target:
     types: [closed]
     branches: [main]
 
 permissions:
   contents: write
   pull-requests: write
-
-concurrency:
-  group: gallery-release
-  cancel-in-progress: false
 
 jobs:
   release:
@@ -61,9 +65,13 @@ jobs:
           git switch --quiet -c "$BRANCH"
           git add metadata.yaml
           git commit --quiet -m "$TITLE (#$PR_NUMBER)"
-          git push --quiet origin "$BRANCH"
-          URL=$(gh pr create --base main --head "$BRANCH" --title "$TITLE" \
-            --body "Adds $SHA from #$PR_NUMBER to metadata.yaml. Opened and merged by the Release to Gallery workflow.")
+          # --force and the PR lookup let a rerun replace a failed attempt.
+          git push --quiet --force origin "$BRANCH"
+          URL=$(gh pr list --head "$BRANCH" --state open --json url --jq '.[0].url')
+          if [ -z "$URL" ]; then
+            URL=$(gh pr create --base main --head "$BRANCH" --title "$TITLE" \
+              --body "Adds $SHA from #$PR_NUMBER to metadata.yaml. Opened and merged by the Release to Gallery workflow.")
+          fi
           gh pr merge "$URL" --merge --delete-branch
         env:
           GH_TOKEN: ${{ github.token }}
