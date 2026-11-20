@@ -16,7 +16,8 @@ ___INFO___
   "displayName": "Revive Media Ad Tag",
   "categories": [
     "ADVERTISING",
-    "CONVERSIONS"
+    "CONVERSIONS",
+    "MARKETING"
   ],
   "brand": {
     "id": "brand_dummy",
