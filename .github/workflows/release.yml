@@ -1,0 +1,79 @@
+# Releases a new template version to the Community Template Gallery.
+#
+# When a pull request with the `release` label is merged into main, this adds
+# the merge commit's SHA to the top of `versions` in metadata.yaml, then opens
+# and merges a pull request with that change. main requires pull requests, so
+# the workflow cannot push to it directly. The Gallery picks up the new version
+# within two to three days.
+#
+# pull_request_target gives a write token even when the PR came from a fork.
+# It is safe here: the job runs only after a merge, and it checks out main and
+# the merge commit, never the PR's own branch.
+#
+# There is no concurrency group: GitHub keeps only one pending run per group
+# and cancels the rest, which would drop releases. If two releases race, the
+# second release PR conflicts on metadata.yaml and fails; rerun it.
+
+name: Release to Gallery
+
+on:
+  pull_request_target:
+    types: [closed]
+    branches: [main]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  release:
+    if: github.event.pull_request.merged == true && contains(github.event.pull_request.labels.*.name, 'release')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Test the merged template
+        run: |
+          git checkout --quiet "$SHA"
+          npm test
+          git checkout --quiet main
+        env:
+          SHA: ${{ github.event.pull_request.merge_commit_sha }}
+
+      - name: Add the version to metadata.yaml
+        run: node scripts/add-release.mjs "$SHA"
+        env:
+          SHA: ${{ github.event.pull_request.merge_commit_sha }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+
+      # A pull request opened with GITHUB_TOKEN does not trigger workflows, so
+      # this cannot loop.
+      - name: Open and merge the release pull request
+        run: |
+          BRANCH="release/${SHA:0:7}"
+          TITLE="Release ${SHA:0:7} to the Community Template Gallery"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git switch --quiet -c "$BRANCH"
+          git add metadata.yaml
+          git commit --quiet -m "$TITLE (#$PR_NUMBER)"
+          # --force and the PR lookup let a rerun replace a failed attempt.
+          git push --quiet --force origin "$BRANCH"
+          URL=$(gh pr list --head "$BRANCH" --state open --json url --jq '.[0].url')
+          if [ -z "$URL" ]; then
+            URL=$(gh pr create --base main --head "$BRANCH" --title "$TITLE" \
+              --body "Adds $SHA from #$PR_NUMBER to metadata.yaml. Opened and merged by the Release to Gallery workflow.")
+          fi
+          gh pr merge "$URL" --merge --delete-branch
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SHA: ${{ github.event.pull_request.merge_commit_sha }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}

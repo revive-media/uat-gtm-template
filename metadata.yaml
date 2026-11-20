@@ -1,4 +1,4 @@
-# Add each release's commit SHA to the top of versions. See README > Release.
+# Releases are added by .github/workflows/release.yml. See README > Release.
 homepage: "https://www.revivemedia.com"
 documentation: "https://github.com/revive-media/uat-gtm-template#readme"
 versions:
