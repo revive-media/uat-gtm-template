@@ -148,7 +148,7 @@ commits listed in `versions` in `metadata.yaml`, newest first.
 2. Open a pull request into `main` and add the **release** label. Users see
    release notes in GTM. To write them, add a `## Release notes` section to the
    PR description; its first paragraph is used. Without one, the PR title is
-   used, minus the Linear key (`REP-123:`).
+   used, minus a leading issue key such as `ABC-123:`.
 3. Merge the PR. The **Release to Gallery** workflow tests the merged
    `template.tpl`, adds the merge commit's SHA to the top of `versions`, then
    opens and merges a `release/<sha>` PR with that change. It fails if
