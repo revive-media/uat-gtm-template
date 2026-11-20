@@ -2,5 +2,5 @@
 homepage: "https://www.revivemedia.com"
 documentation: "https://github.com/revive-media/uat-gtm-template#readme"
 versions:
-  - sha: ca368d72c631b7900c8d8fe566b5ffa6622b6fc5
+  - sha: 34f59e2f93abb898956d01769835c45970bbcae9
     changeNotes: Initial release.
