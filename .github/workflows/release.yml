@@ -30,14 +30,15 @@ jobs:
     env:
       GH_TOKEN: ${{ github.token }}
       SHA: ${{ github.sha }}
-      PR_FILE: ${{ runner.temp }}/pr.json
+      # The runner context is not available here, so steps use $RUNNER_TEMP.
+      PR_FILE_NAME: pr.json
     steps:
       - name: Find the merged pull request
         id: pr
         run: |
           gh api "repos/$GITHUB_REPOSITORY/commits/$SHA/pulls" \
-            --jq '[.[] | select(.merged_at != null and .merge_commit_sha == $ENV.SHA)][0] // {}' > "$PR_FILE"
-          if jq -e '(.labels // []) | map(.name) | index("release")' "$PR_FILE" > /dev/null; then
+            --jq '[.[] | select(.merged_at != null and .merge_commit_sha == $ENV.SHA)][0] // {}' > "$RUNNER_TEMP/$PR_FILE_NAME"
+          if jq -e '(.labels // []) | map(.name) | index("release")' "$RUNNER_TEMP/$PR_FILE_NAME" > /dev/null; then
             echo "release=true" >> "$GITHUB_OUTPUT"
           else
             echo "Not a merge of a PR labeled release. Nothing to do."
@@ -64,8 +65,8 @@ jobs:
       - name: Add the version to metadata.yaml
         if: steps.pr.outputs.release == 'true'
         run: |
-          export PR_TITLE="$(jq -r '.title // ""' "$PR_FILE")"
-          export PR_BODY="$(jq -r '.body // ""' "$PR_FILE")"
+          export PR_TITLE="$(jq -r '.title // ""' "$RUNNER_TEMP/$PR_FILE_NAME")"
+          export PR_BODY="$(jq -r '.body // ""' "$RUNNER_TEMP/$PR_FILE_NAME")"
           node scripts/add-release.mjs "$SHA"
 
       # A pull request opened with GITHUB_TOKEN does not trigger workflows, so
@@ -73,7 +74,7 @@ jobs:
       - name: Open and merge the release pull request
         if: steps.pr.outputs.release == 'true'
         run: |
-          PR_NUMBER="$(jq -r .number "$PR_FILE")"
+          PR_NUMBER="$(jq -r .number "$RUNNER_TEMP/$PR_FILE_NAME")"
           BRANCH="release/${SHA:0:7}"
           TITLE="Release ${SHA:0:7} to the Community Template Gallery"
           git config user.name "github-actions[bot]"
