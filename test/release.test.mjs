@@ -37,13 +37,13 @@ test('quotes notes so quotes, colons, and $ sequences stay as typed', () => {
 
 test('notes come from the "## Release notes" section when there is one', () => {
   const body = '## Context\n\nInternal.\n\n## Release notes\n\nAdds the Lead event.\nFixes consent.\n\nMore detail.\n\n## Tests\n';
-  assert.equal(releaseNotes('REP-1: Something', body), 'Adds the Lead event. Fixes consent.');
+  assert.equal(releaseNotes('ABC-1: Something', body), 'Adds the Lead event. Fixes consent.');
 });
 
-test('notes fall back to the PR title without the Linear key', () => {
-  assert.equal(releaseNotes('REP-1086: Add the Lead event', '## Context\n\nx'), 'Add the Lead event');
+test('notes fall back to the PR title without a leading issue key', () => {
+  assert.equal(releaseNotes('ABC-123: Add the Lead event', '## Context\n\nx'), 'Add the Lead event');
   assert.equal(releaseNotes('Add the Lead event', null), 'Add the Lead event');
-  assert.equal(releaseNotes('REP-1: Title', '## Release notes\n\n<!-- write here -->\n'), 'Title');
+  assert.equal(releaseNotes('ABC-1: Title', '## Release notes\n\n<!-- write here -->\n'), 'Title');
   assert.throws(() => releaseNotes('', ''), /No release notes/);
 });
 
