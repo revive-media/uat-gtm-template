@@ -2,5 +2,7 @@
 homepage: "https://www.revivemedia.com"
 documentation: "https://github.com/revive-media/uat-gtm-template#readme"
 versions:
+  - sha: ea3add8897e9543c33148641ffe633ade329501c
+    changeNotes: "Removes an internal note from the template."
   - sha: 34f59e2f93abb898956d01769835c45970bbcae9
     changeNotes: Initial release.
